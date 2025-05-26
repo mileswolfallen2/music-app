@@ -10,16 +10,7 @@ let playlist2 = JSON.parse(localStorage.getItem('playlist2')) || [];
 
 // Static songs (add more as needed)
 const staticSongs = [
-  {
-    "id": {
-      "videoId": "Qe9jHEmP8gI"
-    },
-    "snippet": {
-      "title": "GRUG FUNK",
-      "thumbnails": {
-        "high": {
-          "url": "https://i.ytimg.com/vi/Qe9jHEmP8gI/hqdefault.jpg"
-        },
+  
   {
     id: { videoId: "sfoKu6BvWUs" },
     snippet: {
@@ -3197,6 +3188,7 @@ const staticSongs = [
       title: "AUTOMOTIVO MANGOS",
       thumbnails: { high: { url: "https://i.ytimg.com/vi/r_-MLoiVc6E/hqdefault.jpg" } }
     }
+
   },
   {
     id: { videoId: "oz5Li-ba--w" },
@@ -3834,16 +3826,15 @@ const staticSongs = [
       title: "Eminem - Like Toy Soldiers (Official Music Video)",
       thumbnails: { high: { url: "https://i.ytimg.com/vi/lexLAjh8fPA/hqdefault.jpg" } }
     }
-  }
   },
   {
     id: { videoId: "Qe9jHEmP8gI" },
     snippet: {
       title: "GRUG FUNK",
       thumbnails: { high: { url: "https://i.ytimg.com/vi/Qe9jHEmP8gI/hqdefault.jpg" } }
-    } 
-  },
-]; 
+    }
+  }
+];
 
 
 // Show random songs on page load
@@ -3906,7 +3897,7 @@ function displayResults(videos) {
 // Play selected video
 function playVideo(videoId) {
     const iframe = document.createElement('iframe');
-    iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&iv_load_policy=3&controls=1&disablekb=1&fs=0`;
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
     iframe.frameBorder = "0";
     iframe.allow = "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture";
     iframe.allowFullscreen = true;
