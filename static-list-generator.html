@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Static YouTube Song List Generator</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        textarea { width: 100%; height: 100px; }
+        pre { background: #eee; padding: 1em; }
+    </style>
+</head>
+<body>
+    <h1>Static YouTube Song List Generator</h1>
+    <p>Paste YouTube video URLs (one per line):</p>
+    <textarea id="urls"></textarea>
+    <button id="generate">Generate Static List</button>
+    <h2>Resulting JavaScript Array:</h2>
+    <pre id="output"></pre>
+    <script>
+        function extractVideoId(url) {
+            // Handles various YouTube URL formats
+            const match = url.match(/(?:v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
+            return match ? match[1] : null;
+        }
+
+        document.getElementById('generate').onclick = async function() {
+            const lines = document.getElementById('urls').value.split('\n').map(l => l.trim()).filter(Boolean);
+            const arr = [];
+            for (const url of lines) {
+                const id = extractVideoId(url);
+                if (!id) continue;
+                // Fetch video title and thumbnail using oEmbed (no API key required, but limited info)
+                try {
+                    const resp = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`);
+                    if (!resp.ok) throw new Error('oEmbed failed');
+                    const data = await resp.json();
+                    arr.push({
+                        id: { videoId: id },
+                        snippet: {
+                            title: data.title,
+                            thumbnails: { high: { url: data.thumbnail_url } }
+                        }
+                    });
+                } catch (e) {
+                    arr.push({
+                        id: { videoId: id },
+                        snippet: {
+                            title: "Unknown Title",
+                            thumbnails: { high: { url: `https://i.ytimg.com/vi/${id}/hqdefault.jpg` } }
+                        }
+                    });
+                }
+            }
+            document.getElementById('output').textContent = JSON.stringify(arr, null, 2);
+        };
+    </script>
+</body>
+</html>

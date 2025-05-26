@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Music Clone</title>
+    <title>moon music</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -24,13 +24,34 @@
             <!-- Video will be embedded here -->
         </div>
         
-        <!-- Playlist Section -->
-        <h2>Your Playlist</h2>
-        <div id="playlist" class="playlist">
-            <!-- Playlist items will appear here -->
+        <!-- Playlist Sections -->
+        <h2>Your Playlist 1</h2>
+        <div id="playlist1" class="playlist">
+            <!-- Playlist 1 items will appear here -->
+        </div>
+        <h2>Your Playlist 2</h2>
+        <div id="playlist2" class="playlist">
+            <!-- Playlist 2 items will appear here -->
         </div>
     </div>
 
+    <!-- Music Control Bar (fixed at bottom) -->
+    <div id="musicControls" class="music-controls">
+        <button id="prevBtn">⏮️</button>
+        <button id="playPauseBtn">▶️</button>
+        <button id="nextBtn">⏭️</button>
+        <input type="range" id="seekBar" min="0" max="100" value="0">
+        <span id="currentTime">0:00</span> / <span id="duration">0:00</span>
+        <input type="range" id="volumeBar" min="0" max="1" step="0.01" value="1">
+    </div>
+
+    <footer>
+        <p>&copy; 2024 YouTube Music Clone</p>
+        <p>Developed by miles allen</p>
+        <a href="https://github.com/mileswolfallen2/music-app">more info and licine</a>
+        <a href="/static-list-generator.html">test</a>
+        <a href="/static-to-js.html">tes2t</a>
+    </footer>
     <script src="script.js"></script>
 </body>
 </html>
