@@ -3841,9 +3841,9 @@ const staticSongs = [
     snippet: {
       title: "GRUG FUNK",
       thumbnails: { high: { url: "https://i.ytimg.com/vi/Qe9jHEmP8gI/hqdefault.jpg" } }
-    }
-  }
-];
+    } 
+  },
+]; 
 
 
 // Show random songs on page load
