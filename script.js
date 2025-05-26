@@ -3835,6 +3835,14 @@ const staticSongs = [
       thumbnails: { high: { url: "https://i.ytimg.com/vi/lexLAjh8fPA/hqdefault.jpg" } }
     }
   }
+  },
+  {
+    id: { videoId: "Qe9jHEmP8gI" },
+    snippet: {
+      title: "GRUG FUNK",
+      thumbnails: { high: { url: "https://i.ytimg.com/vi/Qe9jHEmP8gI/hqdefault.jpg" } }
+    }
+  }
 ];
 
 
