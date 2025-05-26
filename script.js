@@ -11,6 +11,16 @@ let playlist2 = JSON.parse(localStorage.getItem('playlist2')) || [];
 // Static songs (add more as needed)
 const staticSongs = [
   {
+    "id": {
+      "videoId": "Qe9jHEmP8gI"
+    },
+    "snippet": {
+      "title": "GRUG FUNK",
+      "thumbnails": {
+        "high": {
+          "url": "https://i.ytimg.com/vi/Qe9jHEmP8gI/hqdefault.jpg"
+        },
+  {
     id: { videoId: "sfoKu6BvWUs" },
     snippet: {
       title: "Plantera (from \"Terraria\")",
