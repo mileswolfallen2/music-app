@@ -109,7 +109,6 @@ function displayResults(videos) {
             addToQueue(video);
         });
         videoItem.addEventListener('click', (event) => {
-            // Prevent playVideo when clicking the button
             if (event.target !== addButton && event.target !== queueButton) {
                 playVideo(video.id.videoId);
             }
