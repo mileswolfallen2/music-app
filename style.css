@@ -287,3 +287,20 @@ footer a {
 footer a:hover {
     color: var(--accent-light);
 }
+
+/* Loop button visual states */
+.music-controls #loopBtn.no-repeat {
+    background: none;
+    color: #fff;
+    border: 2px solid transparent;
+}
+.music-controls #loopBtn.repeat-all {
+    background: #1db95422;
+    color: #1db954;
+    border: 2px solid #1db954;
+}
+.music-controls #loopBtn.repeat-one {
+    background: #1db954;
+    color: #fff;
+    border: 2px solid #1db954;
+}
