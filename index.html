@@ -9,49 +9,37 @@
 <body>
     <div class="container">
         <header>
-            <h1>Moon Music</h1>
+            <h1>YouTube Music Clone</h1>
             <input type="text" id="searchInput" placeholder="Search for music..." />
         </header>
-        
-        <!-- Error Message -->
-        <div id="errorMessage" class="error-message" style="display: none;">Oops! Something went wrong. Please try again later.</div>
-
-        <!-- Search Results -->
         <div id="results" class="results"></div>
-        
-        <!-- Player -->
         <div id="player" class="player">
-            <!-- Video will be embedded here -->
+            <iframe id="ytplayer" width="400" height="225"
+                src="https://www.youtube.com/embed/fJ9rUzIMcZQ?enablejsapi=1"
+                frameborder="0"
+                allow="autoplay; encrypted-media"
+                allowfullscreen>
+            </iframe>
         </div>
-        
-        <!-- Playlist Sections -->
-        <h2>Your Playlist 1</h2>
-        <div id="playlist1" class="playlist">
-            <!-- Playlist 1 items will appear here -->
-        </div>
-        <h2>Your Playlist 2</h2>
-        <div id="playlist2" class="playlist">
-            <!-- Playlist 2 items will appear here -->
-        </div>
+        <div id="queueDisplay" class="queue-display"></div>
     </div>
 
-    <!-- Music Control Bar (fixed at bottom) -->
-    <div id="musicControls" class="music-controls">
+    <div class="music-controls">
         <button id="prevBtn">⏮️</button>
         <button id="playPauseBtn">▶️</button>
         <button id="nextBtn">⏭️</button>
-        <input type="range" id="seekBar" min="0" max="100" value="0">
-        <span id="currentTime">0:00</span> / <span id="duration">0:00</span>
-        <input type="range" id="volumeBar" min="0" max="1" step="0.01" value="1">
+        <button id="shuffleBtn">🔀</button>
+        <span id="songTitle" style="margin-left:1rem;"></span>
     </div>
 
     <footer>
         <p>&copy; 2024 YouTube Music Clone</p>
         <p>Developed by miles allen</p>
-        <a href="https://github.com/mileswolfallen2/music-app">more info and licine</a>
+        <a href="https://github.com/mileswolfallen2/music-app">more info and license</a>
         <a href="/static-list-generator.html">test</a>
-        <a href="/static-to-js.html">tes2t</a>
+        <a href="/static-to-js.html">test2</a>
     </footer>
+    <script src="songs.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
