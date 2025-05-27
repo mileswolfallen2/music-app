@@ -940,7 +940,7 @@ const staticSongs = [
     }
   },
   {
-    id: { videoId: "IjBTnpYRcgQ" },
+    id: { videoId: "_5w8SJ3yVsc" },
     snippet: {
       title: "Milky Ways",
       thumbnails: { high: { url: "https://i.ytimg.com/vi/IjBTnpYRcgQ/hqdefault.jpg" } }
