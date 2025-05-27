@@ -46,6 +46,7 @@ static-to-js.html	Converts HTML playlist elements into JavaScript format.
 <h2>🌐 Live Demo</h2>
 
 🔗 Try the Music App on GitHub Pages
+or here https://music-app-d3v.pages.dev/
 
 <h3>📄 License</h3>
 
