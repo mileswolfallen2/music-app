@@ -121,6 +121,7 @@ function displayResults(videos) {
 let ytApiPlayer;
 let isPlaying = false;
 
+// Only create the player, don't autoplay!
 function onYouTubeIframeAPIReady() {
     let firstVideoId = (songQueue.length > 0 && currentQueueIndex >= 0)
         ? songQueue[currentQueueIndex].id.videoId
@@ -135,65 +136,89 @@ function onYouTubeIframeAPIReady() {
     });
 }
 
-function onPlayerStateChange(event) {
-    if (event.data === YT.PlayerState.ENDED) {
-        if (loopMode === 2) {
-            // Repeat one ONCE, then reset to no repeat
-            playQueueSong();
-            loopMode = 0;
-            updateLoopBtn();
-        } else if (currentQueueIndex < songQueue.length - 1) {
-            // Play next
-            skipNext();
-        } else if (loopMode === 1 && songQueue.length > 0) {
-            // Repeat all
-            currentQueueIndex = 0;
-            playQueueSong();
-        }
-        // else: no repeat, do nothing
-    }
-}
-
+// Only play after a user gesture (tap/click)
 function playVideo(videoId) {
     if (ytApiPlayer && ytApiPlayer.loadVideoById) {
         ytApiPlayer.loadVideoById(videoId);
+        // On mobile, playback will only start if this is called from a user event
         isPlaying = true;
         playPauseBtn.textContent = '⏸️';
     }
 }
 
-// Add video to a playlist (default to playlist1 for now)
-function addToPlaylist(video, playlistNum = 1) {
-    let playlist = playlistNum === 1 ? playlist1 : playlist2;
-    const isInPlaylist = playlist.some(item => item.id === video.id.videoId);
-    if (!isInPlaylist) {
-        playlist.push({
-            id: video.id.videoId,
-            title: video.snippet.title,
-            thumbnail: video.snippet.thumbnails.high.url
-        });
-        displayPlaylist(`playlist${playlistNum}`, playlist);
-        localStorage.setItem(`playlist${playlistNum}`, JSON.stringify(playlist));
+// Play/Pause button (user gesture)
+playPauseBtn.onclick = function() {
+    if (!ytApiPlayer) return;
+    playPauseBtn.classList.add('pressed');
+    setTimeout(() => playPauseBtn.classList.remove('pressed'), 150);
+
+    if (!isPlaying) {
+        ytApiPlayer.playVideo();
+        playPauseBtn.textContent = '⏸️';
+    } else {
+        ytApiPlayer.pauseVideo();
+        playPauseBtn.textContent = '▶️';
+    }
+    isPlaying = !isPlaying;
+};
+
+// Skip to next song
+function skipNext() {
+    if (currentQueueIndex < songQueue.length - 1) {
+        currentQueueIndex++;
+        playQueueSong();
     }
 }
 
-// Display playlist
-function displayPlaylist(playlistId, items) {
-    const playlistContainer = document.getElementById(playlistId);
-    if (!playlistContainer) {
-        console.error('Playlist container not found:', playlistId);
+// Skip to previous song
+function skipPrev() {
+    if (currentQueueIndex > 0) {
+        currentQueueIndex--;
+        playQueueSong();
+    }
+}
+
+// Clear queue (optional)
+function clearQueue() {
+    songQueue = [];
+    currentQueueIndex = -1;
+    renderQueue();
+}
+
+// Display search results
+function displayResults(videos) {
+    resultsContainer.innerHTML = '';
+    if (videos.length === 0) {
+        resultsContainer.innerHTML = '<p>No results found.</p>';
         return;
     }
-    playlistContainer.innerHTML = '';
-    items.forEach(video => {
-        const playlistItem = document.createElement('div');
-        playlistItem.classList.add('playlist-item');
-        playlistItem.innerHTML = `
-            <img src="${video.thumbnail}" alt="${video.title}" width="50">
-            <h3>${video.title}</h3>
+    videos.forEach(video => {
+        const videoItem = document.createElement('div');
+        videoItem.classList.add('result-item');
+        videoItem.innerHTML = `
+            <img src="${video.snippet.thumbnails.high.url}" alt="${video.snippet.title}">
+            <h3>${video.snippet.title}</h3>
+            <button class="add-to-playlist" data-video-id="${video.id.videoId}">Add to Playlist</button>
+            <button class="add-to-queue" data-video-id="${video.id.videoId}">Queue</button>
         `;
-        playlistItem.addEventListener('click', () => playVideo(video.id));
-        playlistContainer.appendChild(playlistItem);
+        // Add to playlist
+        const addButton = videoItem.querySelector('.add-to-playlist');
+        addButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            addToPlaylist(video, 1);
+        });
+        // Add to queue
+        const queueButton = videoItem.querySelector('.add-to-queue');
+        queueButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            addToQueue(video);
+        });
+        videoItem.addEventListener('click', (event) => {
+            if (event.target !== addButton && event.target !== queueButton) {
+                playVideo(video.id.videoId);
+            }
+        });
+        resultsContainer.appendChild(videoItem);
     });
 }
 
