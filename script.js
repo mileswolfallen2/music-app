@@ -1,43 +1,56 @@
-// Elements
+// --- ELEMENTS ---
 const searchInput = document.getElementById('searchInput');
 const resultsContainer = document.getElementById('results');
 const playPauseBtn = document.getElementById('playPauseBtn');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const shuffleBtn = document.getElementById('shuffleBtn');
+const loopBtn = document.getElementById('loopBtn');
+const queueDisplay = document.getElementById('queueDisplay');
+const songTitle = document.getElementById('songTitle');
 
-// Initialize Playlists from localStorage
-let playlist1 = JSON.parse(localStorage.getItem('playlist1')) || [];
-let playlist2 = JSON.parse(localStorage.getItem('playlist2')) || [];
-
-// Show random songs on page load
-function showRandomSongs(count = 5) {
-    let shuffled = staticSongs.slice().sort(() => 0.5 - Math.random());
-    let selected = shuffled.slice(0, Math.min(count, staticSongs.length));
-    displayResults(selected);
-}
-
-// Search static songs
-function searchStaticSongs(query) {
-    const lower = query.toLowerCase();
-    const results = staticSongs.filter(song =>
-        song.snippet.title.toLowerCase().includes(lower)
-    );
-    displayResults(results);
-}
-
-// Event listener for search input (updates on every keystroke)
-searchInput.addEventListener('input', (e) => {
-    const query = e.target.value;
-    if (query.length > 2) {
-        searchStaticSongs(query);
-    } else {
-        showRandomSongs();
-    }
-});
-
-// --- QUEUE LOGIC ---
+// --- STATE ---
 let songQueue = [];
 let currentQueueIndex = -1;
+let ytApiPlayer;
+let isPlaying = false;
+let loopMode = 0; // 0 = no repeat, 1 = repeat all, 2 = repeat one
 
-// Add song to queue and play if nothing is playing
+// --- YOUTUBE PLAYER ---
+function onYouTubeIframeAPIReady() {
+    ytApiPlayer = new YT.Player('player', {
+        height: '225',
+        width: '400',
+        videoId: '', // Start empty, only play after user action
+        events: { 'onStateChange': onPlayerStateChange }
+    });
+}
+
+function playVideo(videoId) {
+    if (ytApiPlayer && ytApiPlayer.loadVideoById) {
+        ytApiPlayer.loadVideoById(videoId);
+        isPlaying = true;
+        playPauseBtn.textContent = '⏸️';
+        updateSongTitle();
+    }
+}
+
+function onPlayerStateChange(event) {
+    if (event.data === YT.PlayerState.ENDED) {
+        if (loopMode === 2) {
+            playQueueSong();
+            loopMode = 0;
+            updateLoopBtn();
+        } else if (currentQueueIndex < songQueue.length - 1) {
+            skipNext();
+        } else if (loopMode === 1 && songQueue.length > 0) {
+            currentQueueIndex = 0;
+            playQueueSong();
+        }
+    }
+}
+
+// --- QUEUE LOGIC ---
 function addToQueue(video) {
     songQueue.push(video);
     if (currentQueueIndex === -1) {
@@ -47,17 +60,13 @@ function addToQueue(video) {
     renderQueue();
 }
 
-// Play current song in queue
 function playQueueSong() {
     if (currentQueueIndex >= 0 && currentQueueIndex < songQueue.length) {
         playVideo(songQueue[currentQueueIndex].id.videoId);
-        isPlaying = true;
-        playPauseBtn.textContent = '⏸️';
         renderQueue();
     }
 }
 
-// Skip to next song
 function skipNext() {
     if (currentQueueIndex < songQueue.length - 1) {
         currentQueueIndex++;
@@ -65,7 +74,6 @@ function skipNext() {
     }
 }
 
-// Skip to previous song
 function skipPrev() {
     if (currentQueueIndex > 0) {
         currentQueueIndex--;
@@ -73,14 +81,13 @@ function skipPrev() {
     }
 }
 
-// Clear queue (optional)
 function clearQueue() {
     songQueue = [];
     currentQueueIndex = -1;
     renderQueue();
 }
 
-// Display search results
+// --- DISPLAY ---
 function displayResults(videos) {
     resultsContainer.innerHTML = '';
     if (videos.length === 0) {
@@ -93,174 +100,21 @@ function displayResults(videos) {
         videoItem.innerHTML = `
             <img src="${video.snippet.thumbnails.high.url}" alt="${video.snippet.title}">
             <h3>${video.snippet.title}</h3>
-            <button class="add-to-playlist" data-video-id="${video.id.videoId}">Add to Playlist</button>
-            <button class="add-to-queue" data-video-id="${video.id.videoId}">Queue</button>
+            <button class="add-to-queue">Queue</button>
         `;
-        // Add to playlist
-        const addButton = videoItem.querySelector('.add-to-playlist');
-        addButton.addEventListener('click', (event) => {
-            event.stopPropagation();
-            addToPlaylist(video, 1);
-        });
-        // Add to queue
         const queueButton = videoItem.querySelector('.add-to-queue');
         queueButton.addEventListener('click', (event) => {
             event.stopPropagation();
             addToQueue(video);
         });
-        videoItem.addEventListener('click', (event) => {
-            if (event.target !== addButton && event.target !== queueButton) {
-                playVideo(video.id.videoId);
-            }
+        videoItem.addEventListener('click', () => {
+            playVideo(video.id.videoId);
         });
         resultsContainer.appendChild(videoItem);
     });
 }
 
-// --- YOUTUBE PLAYER LOGIC ---
-let ytApiPlayer;
-let isPlaying = false;
-
-// Only create the player, don't autoplay!
-function onYouTubeIframeAPIReady() {
-    let firstVideoId = (songQueue.length > 0 && currentQueueIndex >= 0)
-        ? songQueue[currentQueueIndex].id.videoId
-        : "fJ9rUzIMcZQ";
-    ytApiPlayer = new YT.Player('player', {
-        height: '225',
-        width: '400',
-        videoId: firstVideoId,
-        events: {
-            'onStateChange': onPlayerStateChange
-        }
-    });
-}
-
-// Only play after a user gesture (tap/click)
-function playVideo(videoId) {
-    if (ytApiPlayer && ytApiPlayer.loadVideoById) {
-        ytApiPlayer.loadVideoById(videoId);
-        // On mobile, playback will only start if this is called from a user event
-        isPlaying = true;
-        playPauseBtn.textContent = '⏸️';
-    }
-}
-
-// Play/Pause button (user gesture)
-playPauseBtn.onclick = function() {
-    if (!ytApiPlayer) return;
-    playPauseBtn.classList.add('pressed');
-    setTimeout(() => playPauseBtn.classList.remove('pressed'), 150);
-
-    if (!isPlaying) {
-        ytApiPlayer.playVideo();
-        playPauseBtn.textContent = '⏸️';
-    } else {
-        ytApiPlayer.pauseVideo();
-        playPauseBtn.textContent = '▶️';
-    }
-    isPlaying = !isPlaying;
-};
-
-// Skip to next song
-function skipNext() {
-    if (currentQueueIndex < songQueue.length - 1) {
-        currentQueueIndex++;
-        playQueueSong();
-    }
-}
-
-// Skip to previous song
-function skipPrev() {
-    if (currentQueueIndex > 0) {
-        currentQueueIndex--;
-        playQueueSong();
-    }
-}
-
-// Clear queue (optional)
-function clearQueue() {
-    songQueue = [];
-    currentQueueIndex = -1;
-    renderQueue();
-}
-
-// Display search results
-function displayResults(videos) {
-    resultsContainer.innerHTML = '';
-    if (videos.length === 0) {
-        resultsContainer.innerHTML = '<p>No results found.</p>';
-        return;
-    }
-    videos.forEach(video => {
-        const videoItem = document.createElement('div');
-        videoItem.classList.add('result-item');
-        videoItem.innerHTML = `
-            <img src="${video.snippet.thumbnails.high.url}" alt="${video.snippet.title}">
-            <h3>${video.snippet.title}</h3>
-            <button class="add-to-playlist" data-video-id="${video.id.videoId}">Add to Playlist</button>
-            <button class="add-to-queue" data-video-id="${video.id.videoId}">Queue</button>
-        `;
-        // Add to playlist
-        const addButton = videoItem.querySelector('.add-to-playlist');
-        addButton.addEventListener('click', (event) => {
-            event.stopPropagation();
-            addToPlaylist(video, 1);
-        });
-        // Add to queue
-        const queueButton = videoItem.querySelector('.add-to-queue');
-        queueButton.addEventListener('click', (event) => {
-            event.stopPropagation();
-            addToQueue(video);
-        });
-        videoItem.addEventListener('click', (event) => {
-            if (event.target !== addButton && event.target !== queueButton) {
-                playVideo(video.id.videoId);
-            }
-        });
-        resultsContainer.appendChild(videoItem);
-    });
-}
-
-// --- SKIP BUTTONS ---
-document.getElementById('prevBtn').addEventListener('click', skipPrev);
-document.getElementById('nextBtn').addEventListener('click', skipNext);
-
-// --- PLAY/PAUSE BUTTON LOGIC ---
-playPauseBtn.onclick = function() {
-    if (!ytApiPlayer) return;
-    playPauseBtn.classList.add('pressed');
-    setTimeout(() => playPauseBtn.classList.remove('pressed'), 150);
-
-    if (!isPlaying) {
-        ytApiPlayer.playVideo();
-        playPauseBtn.textContent = '⏸️';
-    } else {
-        ytApiPlayer.pauseVideo();
-        playPauseBtn.textContent = '▶️';
-    }
-    isPlaying = !isPlaying;
-};
-
-// --- SHUFFLE BUTTON LOGIC ---
-document.getElementById('shuffleBtn').addEventListener('click', function() {
-    if (songQueue.length > 1) {
-        // Shuffle the queue except the current song
-        const current = songQueue[currentQueueIndex];
-        const rest = songQueue.slice(0, currentQueueIndex).concat(songQueue.slice(currentQueueIndex + 1));
-        for (let i = rest.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [rest[i], rest[j]] = [rest[j], rest[i]];
-        }
-        songQueue = [current, ...rest];
-        currentQueueIndex = 0;
-        renderQueue();
-    }
-});
-
-// --- QUEUE DISPLAY ---
 function renderQueue() {
-    const queueDisplay = document.getElementById('queueDisplay');
     if (!queueDisplay) return;
     if (songQueue.length === 0) {
         queueDisplay.innerHTML = "<h3>Queue</h3><p>No songs in queue.</p>";
@@ -276,8 +130,6 @@ function renderQueue() {
     });
     html += "</ul>";
     queueDisplay.innerHTML = html;
-
-    // Add event listeners to remove buttons
     queueDisplay.querySelectorAll('.remove-from-queue').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -287,9 +139,99 @@ function renderQueue() {
     });
 }
 
-// Remove from queue
+function updateSongTitle() {
+    if (currentQueueIndex >= 0 && songQueue[currentQueueIndex]) {
+        songTitle.textContent = songQueue[currentQueueIndex].snippet?.title || songQueue[currentQueueIndex].title;
+    } else {
+        songTitle.textContent = '';
+    }
+}
+
+// --- SEARCH ---
+function showRandomSongs(count = 5) {
+    let shuffled = staticSongs.slice().sort(() => 0.5 - Math.random());
+    let selected = shuffled.slice(0, Math.min(count, staticSongs.length));
+    displayResults(selected);
+}
+
+function searchStaticSongs(query) {
+    const lower = query.toLowerCase();
+    const results = staticSongs.filter(song =>
+        song.snippet.title.toLowerCase().includes(lower)
+    );
+    displayResults(results);
+}
+
+searchInput.addEventListener('input', (e) => {
+    const query = e.target.value;
+    if (query.length > 2) {
+        searchStaticSongs(query);
+    } else {
+        showRandomSongs();
+    }
+});
+
+// --- CONTROLS ---
+playPauseBtn.onclick = function() {
+    if (!ytApiPlayer) return;
+    playPauseBtn.classList.add('pressed');
+    setTimeout(() => playPauseBtn.classList.remove('pressed'), 150);
+
+    if (!isPlaying) {
+        ytApiPlayer.playVideo();
+        playPauseBtn.textContent = '⏸️';
+    } else {
+        ytApiPlayer.pauseVideo();
+        playPauseBtn.textContent = '▶️';
+    }
+    isPlaying = !isPlaying;
+};
+
+prevBtn.onclick = skipPrev;
+nextBtn.onclick = skipNext;
+
+shuffleBtn.onclick = function() {
+    if (songQueue.length > 1) {
+        const current = songQueue[currentQueueIndex];
+        const rest = songQueue.slice(0, currentQueueIndex).concat(songQueue.slice(currentQueueIndex + 1));
+        for (let i = rest.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [rest[i], rest[j]] = [rest[j], rest[i]];
+        }
+        songQueue = [current, ...rest];
+        currentQueueIndex = 0;
+        renderQueue();
+    }
+};
+
+// --- LOOP BUTTON ---
+function updateLoopBtn() {
+    loopBtn.classList.remove('repeat-all', 'repeat-one', 'no-repeat');
+    if (loopMode === 0) {
+        loopBtn.textContent = '🔁';
+        loopBtn.title = 'No repeat';
+        loopBtn.style.color = '';
+        loopBtn.classList.add('no-repeat');
+    } else if (loopMode === 1) {
+        loopBtn.textContent = '🔁';
+        loopBtn.title = 'Repeat all';
+        loopBtn.style.color = '#1db954';
+        loopBtn.classList.add('repeat-all');
+    } else if (loopMode === 2) {
+        loopBtn.textContent = '🔂';
+        loopBtn.title = 'Repeat one';
+        loopBtn.style.color = '#fff';
+        loopBtn.classList.add('repeat-one');
+    }
+}
+loopBtn.onclick = function() {
+    loopMode = (loopMode + 1) % 3;
+    updateLoopBtn();
+};
+updateLoopBtn();
+
+// --- REMOVE FROM QUEUE ---
 function removeFromQueue(idx) {
-    // If removing the current song, skip to next or previous
     if (idx === currentQueueIndex) {
         if (songQueue.length === 1) {
             clearQueue();
@@ -310,66 +252,6 @@ function removeFromQueue(idx) {
     }
     renderQueue();
 }
-
-// --- MEDIA SESSION API (HEADPHONE BUTTONS) ---
-if ('mediaSession' in navigator) {
-    navigator.mediaSession.setActionHandler('play', () => {
-        document.getElementById('playPauseBtn').click();
-    });
-    navigator.mediaSession.setActionHandler('pause', () => {
-        document.getElementById('playPauseBtn').click();
-    });
-    navigator.mediaSession.setActionHandler('previoustrack', () => {
-        document.getElementById('prevBtn').click();
-    });
-    navigator.mediaSession.setActionHandler('nexttrack', () => {
-        document.getElementById('nextBtn').click();
-    });
-}
-
-// --- MEDIA SESSION METADATA (OPTIONAL) ---
-function updateMediaSessionMetadata(song) {
-    if ('mediaSession' in navigator && song) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-            title: song.snippet?.title || song.title || 'Unknown',
-            artist: '',
-            album: '',
-            artwork: [
-                { src: song.snippet?.thumbnails?.high?.url || song.thumbnail, sizes: '512x512', type: 'image/png' }
-            ]
-        });
-    }
-}
-
-// --- LOOP BUTTON LOGIC ---
-let loopMode = 0; // 0 = no repeat, 1 = repeat all, 2 = repeat one
-const loopBtn = document.getElementById('loopBtn');
-
-function updateLoopBtn() {
-    loopBtn.classList.remove('repeat-all', 'repeat-one', 'no-repeat');
-    if (loopMode === 0) {
-        loopBtn.textContent = '🔁';
-        loopBtn.title = 'No repeat';
-        loopBtn.style.color = '';
-        loopBtn.classList.add('no-repeat');
-    } else if (loopMode === 1) {
-        loopBtn.textContent = '🔁';
-        loopBtn.title = 'Repeat all';
-        loopBtn.style.color = '#1db954';
-        loopBtn.classList.add('repeat-all');
-    } else if (loopMode === 2) {
-        loopBtn.textContent = '🔂';
-        loopBtn.title = 'Repeat one';
-        loopBtn.style.color = '#fff';
-        loopBtn.classList.add('repeat-one');
-    }
-}
-
-loopBtn.addEventListener('click', () => {
-    loopMode = (loopMode + 1) % 3;
-    updateLoopBtn();
-});
-updateLoopBtn();
 
 // --- INITIALIZE ---
 showRandomSongs();
