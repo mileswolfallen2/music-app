@@ -9,6 +9,7 @@ const loopBtn = document.getElementById('loopBtn');
 const queueDisplay = document.getElementById('queueDisplay');
 const songTitle = document.getElementById('songTitle');
 const exploreBtn = document.getElementById('exploreBtn');
+const recentSearches = document.getElementById('recentSearches');
 
 // --- STATE ---
 let songQueue = [];
@@ -16,6 +17,7 @@ let currentQueueIndex = -1;
 let ytApiPlayer;
 let isPlaying = false;
 let loopMode = 0; // 0 = no repeat, 1 = repeat all, 2 = repeat one
+let recentSearchList = JSON.parse(localStorage.getItem('recentSearches') || '[]');
 
 // --- YOUTUBE PLAYER ---
 function onYouTubeIframeAPIReady() {
@@ -163,14 +165,63 @@ function searchStaticSongs(query) {
     displayResults(results);
 }
 
-searchInput.addEventListener('input', (e) => {
-    const query = e.target.value;
-    if (query.length > 2) {
-        searchStaticSongs(query);
-    } else {
-        showRandomSongs();
+function showRecentSearches() {
+    if (recentSearchList.length === 0) {
+        recentSearches.style.display = 'none';
+        return;
+    }
+    recentSearches.innerHTML = '';
+    recentSearchList.slice(-5).reverse().forEach(term => {
+        const li = document.createElement('li');
+        li.textContent = term;
+        li.onclick = () => {
+            searchInput.value = term;
+            searchInput.dispatchEvent(new Event('input'));
+            recentSearches.style.display = 'none';
+        };
+        recentSearches.appendChild(li);
+    });
+    recentSearches.style.display = 'block';
+}
+
+function centerSearchBar() {
+    resultsContainer.style.display = 'flex';
+    resultsContainer.style.flexDirection = 'column';
+    resultsContainer.style.alignItems = 'center';
+}
+
+function uncenterSearchBar() {
+    resultsContainer.style.display = '';
+    resultsContainer.style.flexDirection = '';
+    resultsContainer.style.alignItems = '';
+}
+
+searchInput.addEventListener('focus', () => {
+    exploreBtn.style.display = 'none';
+});
+searchInput.addEventListener('blur', () => {
+    setTimeout(() => {
+        exploreBtn.style.display = 'inline-block';
+    }, 200); // Wait for recentSearches click
+});
+
+// Save search term on Enter
+searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        const term = searchInput.value.trim();
+        if (term) {
+            searchStaticSongs(term);
+            centerSearchBar();
+            // Save recent search
+            if (!recentSearchList.includes(term)) {
+                recentSearchList.push(term);
+                if (recentSearchList.length > 10) recentSearchList.shift();
+                localStorage.setItem('recentSearches', JSON.stringify(recentSearchList));
+            }
+        }
     }
 });
+searchInput.addEventListener('blur', uncenterSearchBar);
 
 // --- CONTROLS ---
 playPauseBtn.onclick = function() {
