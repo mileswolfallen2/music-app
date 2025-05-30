@@ -304,3 +304,34 @@ footer a:hover {
     color: #fff;
     border: 2px solid #1db954;
 }
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+}
+
+#exploreBtn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 22px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: background 0.18s, color 0.18s, transform 0.15s;
+    margin-left: 8px;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+#exploreBtn:hover, #exploreBtn:focus {
+    background: var(--accent-light);
+    color: #181818;
+    transform: scale(1.07);
+    outline: none;
+}

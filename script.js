@@ -8,6 +8,7 @@ const shuffleBtn = document.getElementById('shuffleBtn');
 const loopBtn = document.getElementById('loopBtn');
 const queueDisplay = document.getElementById('queueDisplay');
 const songTitle = document.getElementById('songTitle');
+const exploreBtn = document.getElementById('exploreBtn');
 
 // --- STATE ---
 let songQueue = [];
@@ -256,3 +257,9 @@ function removeFromQueue(idx) {
 // --- INITIALIZE ---
 showRandomSongs();
 renderQueue();
+
+exploreBtn.onclick = function() {
+    // Shuffle all songs and show them
+    let shuffled = staticSongs.slice().sort(() => 0.5 - Math.random());
+    displayResults(shuffled);
+};
